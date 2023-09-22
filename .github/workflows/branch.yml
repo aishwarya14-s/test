@@ -1,0 +1,28 @@
+name: Cleanup Old Branches
+
+on:
+  schedule:
+    - cron: "0 0 */30 * *"  # Runs every 30 days at midnight
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: List Branches
+      run: |
+        git for-each-ref --format="%(refname:short) %(committerdate:raw)" refs/heads/ |
+        while read branch date; do
+          if [[ "$branch" != "master" && "$branch" != "main" && "$branch" != "production" && "$branch" != "development" && "$branch" != "staging" ]]; then
+            timestamp=$(date -d "$date" +%s)
+            now=$(date +%s)
+            age=$(( (now - timestamp) / 86400 ))  # Calculate age in days
+            
+            if [ $age -gt 30 ]; then
+              git push origin --delete $branch
+            fi
+          fi
+        done
