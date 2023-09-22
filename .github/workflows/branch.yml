@@ -2,7 +2,8 @@ name: Cleanup Old Branches
 
 on:
   schedule:
-    - cron: "0 0 */30 * *"  # Runs every 30 days at midnight
+    - cron: "12 16 * * ?"
+  # Runs every 30 days at midnight
 
 jobs:
   cleanup:
