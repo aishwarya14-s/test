@@ -15,7 +15,7 @@ jobs:
       id: taggerDryRun
       uses: anothrNick/github-tag-action@1.36.0
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: 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
         WITH_V: true
         DRY_RUN: true
 
@@ -36,5 +36,5 @@ jobs:
       id: taggerFinal
       uses: anothrNick/github-tag-action@1.36.0
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: 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
         WITH_V: true
