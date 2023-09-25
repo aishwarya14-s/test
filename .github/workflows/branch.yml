@@ -1,29 +1,40 @@
-name: Cleanup Old Branches
-
+name: Auto Tag my Application
 on:
-  schedule:
-    - cron: "12 16 * * ?"
-  # Runs every 30 days at midnight
-
+  push:
+    branches:
+      - main
+concurrency: production
 jobs:
-  cleanup:
+  Patch:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: '0'
+    - name: Minor version for each merge
+      id: taggerDryRun
+      uses: anothrNick/github-tag-action@1.36.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+        DRY_RUN: true
 
-    - name: List Branches
+    - name: echo new tag
       run: |
-        git for-each-ref --format="%(refname:short) %(committerdate:raw)" refs/heads/ |
-        while read branch date; do
-          if [[ "$branch" != "master" && "$branch" != "main" && "$branch" != "production" && "$branch" != "development" && "$branch" != "staging" ]]; then
-            timestamp=$(date -d "$date" +%s)
-            now=$(date +%s)
-            age=$(( (now - timestamp) / 86400 ))  # Calculate age in days
-            
-            if [ $age -gt 30 ]; then
-              git push origin --delete $branch
-            fi
-          fi
-        done
+        echo "The next tag version will be: ${{ steps.taggerDryRun.outputs.new_tag }}"
+    - name: echo tag
+      run: |
+        echo "The current tag is: ${{ steps.taggerDryRun.outputs.tag }}"
+    - name: echo part
+      run: |
+        echo "The version increment was: ${{ steps.taggerDryRun.outputs.part }}"
+    # DO MY BUILD HERE
+    # IN CASE OF FAILURE, THE STEP BELOW WILL NOT RUN.
+    
+
+    - name: Minor version for each merge
+      id: taggerFinal
+      uses: anothrNick/github-tag-action@1.36.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
