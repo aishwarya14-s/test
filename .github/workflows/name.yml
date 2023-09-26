@@ -1,0 +1,41 @@
+name: Delete Old Branches
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete_old_branches:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+   
+    - name: Fetch all branches
+      run: git fetch --prune --tags
+
+    - name: Calculate one month ago date
+      id: calculate_date
+      run: |
+        current_date=$(date -u "+%Y-%m-%d")
+        one_month_ago_date=$(date -d "-1 month" "+%s" 2>/dev/null || date -j -v -1m "+%s" 2>/dev/null)
+        echo $one_month_ago_date 
+        echo "Calculated one month ago date: $(date -d @$one_month_ago_date "+%Y-%m-%d")"
+    - name: List branches for debugging
+      run: |
+        git branch -r
+        echo $one_month_ago_date 
+    - name: Run delete branches script
+      run: |
+        current_date=$(date -u "+%Y-%m-%d")
+        threshold_date=${one_month_ago_date}
+        
+        # Loop through all remote branches
+        for branch in $(git branch -r | grep -v HEAD | grep -v origin/development | grep -v origin/master | grep -v origin/main | grep -v origin/production | grep -v origin/staging | sed /\*/d); do
+            if [ -z "$(git log -1 --since="${threshold_date}" -s ${branch})" ]; then
+                echo "Branch to delete: $branch"
+                remote_branch=$(echo ${branch} | sed 's#origin/##' )
+                # Uncomment the next line to delete the branches
+                git push origin --delete ${remote_branch}
+            fi
+        done
